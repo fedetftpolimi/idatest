@@ -6,8 +6,6 @@
 #include <stdexcept>
 
 #include <ida/ida.h>
-#include <ida/ida_spils.h>
-#include <ida/ida_direct.h>
 #include <sunlinsol/sunlinsol_klu.h>
 #include <sunlinsol/sunlinsol_dense.h>
 
