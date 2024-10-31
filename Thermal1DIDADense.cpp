@@ -27,9 +27,14 @@ int residualFunction(double t, N_Vector yy, N_Vector yp, N_Vector rr, void *user
     double *ypval = N_VGetArrayPointer_Serial(yp);
     double *rval =  N_VGetArrayPointer_Serial(rr);
     
+#ifndef SWAP
     rval[0] = 10*sin(yval[1])-ypval[0];
     rval[1] = -yval[1]-ypval[1];
-    
+#else
+    rval[0] = 10*sin(yval[0])-ypval[1];
+    rval[1] = -yval[0]-ypval[0];
+#endif    
+
     auto rb = steady_clock::now();
     auto data = reinterpret_cast<UserData*>(userData);
     data->res += duration_cast<duration<double>>(rb-ra).count();
@@ -45,14 +50,19 @@ int jacobianFunction(double t, double alpha, N_Vector yy, N_Vector yp, N_Vector 
     double *ypval = N_VGetArrayPointer_Serial(yp);
     double *rval =  N_VGetArrayPointer_Serial(rr);
     double *jacval = SUNDenseMatrix_Data(jac);
-    
+   
+#ifndef SWAP 
     jacval[0] = -alpha;
     jacval[1] = 10*cos(yval[1]);
     jacval[2] = 0;
     jacval[3] = -1-alpha;
-#ifdef SWAP
-    swap(jacval[0],jacval[1]);
-    swap(jacval[2],jacval[3]);
+#else
+    jacval[0] = -alpha;
+    jacval[1] = 10*cos(yval[0]);
+    jacval[2] = 0;
+    jacval[3] = -1-alpha;
+    swap(jacval[0], jacval[1]);
+    swap(jacval[2], jacval[3]);
 #endif
     
     auto rb = steady_clock::now();
@@ -69,17 +79,21 @@ int main(int argc, char *argv[])
     
     SUNContext ctx=nullptr;
     SUNContext_Create(nullptr,&ctx);
+
     N_Vector yy = NC(N_VNew_Serial(N,ctx));
     N_Vector yp = NC(N_VNew_Serial(N,ctx));
     double *yval = N_VGetArrayPointer_Serial(yy);
     yval[0] = 0;
     yval[1] = 10;
+
 #ifdef SWAP
     swap(yval[0],yval[1]);
 #endif
+
     double *ypval = N_VGetArrayPointer_Serial(yp);
     ypval[0] = 10*sin(10);
     ypval[1] = -10;
+
 #ifdef SWAP
     swap(ypval[0],ypval[1]);
 #endif
@@ -87,7 +101,7 @@ int main(int argc, char *argv[])
     void *mem=NC(IDACreate(ctx));
     double t0 = 0.0;
     RC(IDAInit(mem, residualFunction, t0, yy, yp));
-    
+
     double rtol = 1.0e-6;
     double abstol = 1.0e-6;
     RC(IDASStolerances(mem, rtol, abstol));
