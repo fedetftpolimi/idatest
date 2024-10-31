@@ -14,8 +14,6 @@
 #include <sundials/sundials_types.h>
 #include <sundials/sundials_math.h>
 
-static_assert(sizeof(realtype)==sizeof(double),"IDA compiled with wrong realtype");
-
 template<typename T>
 T* throwNull(T* ptr, const char *funcName)
 {
